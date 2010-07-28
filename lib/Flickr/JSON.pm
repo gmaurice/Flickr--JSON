@@ -88,10 +88,7 @@ sub method {
     my ( $self, $method, $args ) = @_;
 
     my $url = $self->url( $method ,  $args );
-
     my $request = HTTP::Request->new( GET => $url );
-
-
     my $response = $self->useragent->request( $request );
 
     my $result   = undef;
@@ -100,23 +97,25 @@ sub method {
         my $content = $response->decoded_content;
         $content = trim $content;
         $content =~ s/^jsonFlickrApi\((.+)\)$/$1/;
-	$content =~ s/\{"_content":("?[^"]+"?)\}/$1/g;
+		
+        #print $content;
+		#$content =~ s/\{"_content":(["']?[^"]*["']?)\}/$1/g;
+		$content =~ s/\{"_content":(["']{1}[^}]*["']{1})\}/$1/g;
 
-	$self->response( Flickr::JSON::Response->new );
+		$self->response( Flickr::JSON::Response->new );
 
         $result = decode_json $content;
         if ( $result->{stat} eq 'fail' ){
-		$self->response->success(0);
- 		$self->response->error_code(delete $result->{code});
-		$self->response->error_message(delete $result->{message});
-	}else{
-		$self->response->success(1);
-	}
-        delete $result->{stat};
-	$self->response->code($response->code);
-	$self->response->message($response->message);
-	$self->response->content($result);
-		
+			$self->response->success(0);
+ 			$self->response->error_code(delete $result->{code});
+			$self->response->error_message(delete $result->{message});
+		}else{
+			$self->response->success(1);
+		}
+    	delete $result->{stat};
+		$self->response->code($response->code);
+		$self->response->message($response->message);
+		$self->response->content($result);	
     } else {
     	$self->response(
     		Flickr::JSON::Response->new ( 
@@ -152,6 +151,51 @@ sub url {
     $self->base_url . ( ( $self->base_url !~ /\/$/ ) ? '/' : '' )
         . '?' . join( '&', map { $_ . '=' . $params{ $_ } } keys %params );    
 };
+
+
+
+sub photosets_get_list {
+    my $self = shift;
+    my $user_id = shift ;
+    my $optional = shift || {} ;
+
+    my $response = $self->method( 'flickr.photosets.getList' => 
+    	{ 
+    		user_id => $user_id,
+    		%$optional
+    	}
+    );
+
+    my $sets = [];
+
+    if( $response->is_success ) {
+        $sets = $response->content->{ photoset };
+    }
+
+    $sets;
+};
+
+sub photosets_get_photos {
+    my $self = shift;
+    my $photoset_id = shift ;
+    my $optional = shift || {} ;
+
+    my $response = $self->method( 'flickr.photosets.getPhotos' => 
+    	{
+            photoset_id => $photoset_id,
+            %$optional
+        }
+    );
+
+    my $photos = [];
+    
+    if( $response->is_success ) {
+        $photos = $response->content->{ photo };
+    }
+    
+    $photos;
+};
+
 
 1;
 __END__
