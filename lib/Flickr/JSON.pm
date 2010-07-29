@@ -62,11 +62,47 @@ has 'response' => (
     },
 );
 
+has 'with_bindings' => (
+	isa		=> 'Bool',
+	is	=> 'rw',
+	trigger => \&load_bindings
+);
+
+sub BUILD {
+
+	my $self = shift;
+	my $args = shift;
+
+	if (! exists $args->{with_bindings}){
+		Moose::Util::apply_all_roles( $self, 'Flickr::JSON::Bindings' );
+		$self->{with_bindings} = 1;
+	}
+	
+	$self;
+}
+
+## ATTRIBUTE TRIGGERS
+
 sub set_api_timeout {
 	my $self = shift;
 	my $timeout = shift;
 	$self->useragent->timeout($timeout);
 };
+
+sub load_bindings{
+		my $self = shift;
+		my $with_bindings = shift;
+		
+		if ( not defined $with_bindings ){
+			$with_bindings = 1;
+		}
+		
+		if ( $with_bindings ){
+			Moose::Util::apply_all_roles( $self, 'Flickr::JSON::Bindings' );
+		}
+};
+
+## METHODS
 
 sub sign_args {
 	my $self = shift;
@@ -150,50 +186,6 @@ sub url {
 
     $self->base_url . ( ( $self->base_url !~ /\/$/ ) ? '/' : '' )
         . '?' . join( '&', map { $_ . '=' . $params{ $_ } } keys %params );    
-};
-
-
-
-sub photosets_get_list {
-    my $self = shift;
-    my $user_id = shift ;
-    my $optional = shift || {} ;
-
-    my $response = $self->method( 'flickr.photosets.getList' => 
-    	{ 
-    		user_id => $user_id,
-    		%$optional
-    	}
-    );
-
-    my $sets = [];
-
-    if( $response->is_success ) {
-        $sets = $response->content->{ photoset };
-    }
-
-    $sets;
-};
-
-sub photosets_get_photos {
-    my $self = shift;
-    my $photoset_id = shift ;
-    my $optional = shift || {} ;
-
-    my $response = $self->method( 'flickr.photosets.getPhotos' => 
-    	{
-            photoset_id => $photoset_id,
-            %$optional
-        }
-    );
-
-    my $photos = [];
-    
-    if( $response->is_success ) {
-        $photos = $response->content->{ photo };
-    }
-    
-    $photos;
 };
 
 
