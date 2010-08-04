@@ -135,23 +135,24 @@ sub method {
         $content =~ s/^jsonFlickrApi\((.+)\)$/$1/;
 		
         #print $content;
-		#$content =~ s/\{"_content":(["']?[^"]*["']?)\}/$1/g;
-		$content =~ s/\{"_content":(["']{1}[^}]*["']{1})\}/$1/g;
-
-		$self->response( Flickr::JSON::Response->new );
+	#$content =~ s/\{"_content":(["']?[^"]*["']?)\}/$1/g;
+	$content =~ s/\{"_content":(["']{1}[^}]*["']{1})\}/$1/g;
+        #print $content;
+	$self->response( Flickr::JSON::Response->new );
 
         $result = decode_json $content;
         if ( $result->{stat} eq 'fail' ){
-			$self->response->success(0);
- 			$self->response->error_code(delete $result->{code});
-			$self->response->error_message(delete $result->{message});
-		}else{
-			$self->response->success(1);
-		}
+		$self->response->success(0);
+ 		$self->response->error_code(delete $result->{code});
+		$self->response->error_message(delete $result->{message});
+	}else{
+		$self->response->success(1);
+	}
     	delete $result->{stat};
 		$self->response->code($response->code);
 		$self->response->message($response->message);
-		$self->response->content($result);	
+		$self->response->content($result);
+		$self->response->raw_json($content);
     } else {
     	$self->response(
     		Flickr::JSON::Response->new ( 

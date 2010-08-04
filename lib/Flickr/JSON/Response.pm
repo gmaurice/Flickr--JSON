@@ -47,6 +47,13 @@ has 'success' => (
 	predicate => "is_success",
 );
 
+has 'raw_json' => (
+	is	=> "rw",
+	isa => "Str|Undef",
+	lazy => 1,
+	default => undef,
+);
+
 sub prepare_content {
 	my $self = shift;
 	$self->{content} =  $self->{content}->{ (keys %{$self->content})[0]  };
