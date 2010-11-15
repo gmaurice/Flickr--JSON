@@ -46,7 +46,7 @@ has 'base_url' => (
     default  => "http://api.flickr.com/services/rest/",
 );
 
-has 'auth_url' => (
+has 'auth_base_url' => (
     isa      => 'Str',
     is       => 'rw',
     lazy     => 1,
@@ -178,7 +178,7 @@ sub url {
     my %params = (
         method  => $method,
         api_key => $self->api_key,
-        api_secret=> $self->api_secret,
+        api_secret => $self->api_secret,
         format  => 'json',
         %$args,
     );
@@ -189,6 +189,19 @@ sub url {
         . '?' . join( '&', map { $_ . '=' . $params{ $_ } } keys %params );    
 };
 
+sub auth_url {
+    my ($self, $perms) = @_;
+
+    my %params = (
+        api_key => $self->api_key,
+        perms => $perms,
+    );
+
+    $params{api_sig} = $self->sign_args(\%params);
+    delete $params{api_secret};
+    
+    $self->auth_base_url . '?api_key=' . $params{api_key} . "&perms=$perms&api_sig=".$params{api_sig}; 
+}
 
 1;
 __END__
