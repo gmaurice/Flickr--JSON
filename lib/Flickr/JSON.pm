@@ -39,6 +39,13 @@ has 'api_secret' => (
     required => 1,
 );
 
+has 'frob' => (
+	isa	=> 'Str',
+	is	=> 'rw',
+	lazy	=> 1,
+	default => sub { [] },
+);
+
 has 'base_url' => (
     isa      => 'Str',
     is       => 'rw',
@@ -112,8 +119,8 @@ sub sign_args {
 
 	foreach my $key (sort {$a cmp $b} keys %{$args}) {
 
-		my $value = (defined($args->{$key})) ? $args->{$key} : "";
-		$sig .= $key . $value;
+		  my $value = (defined($args->{$key})) ? $args->{$key} : "";
+		  $sig .= $key . $value;
 	}
 
 	return md5_hex($sig);
@@ -134,10 +141,7 @@ sub method {
         $content = trim $content;
         $content =~ s/^jsonFlickrApi\((.+)\)$/$1/;
 		
-        #print $content;
-	#$content =~ s/\{"_content":(["']?[^"]*["']?)\}/$1/g;
 	$content =~ s/\{"_content":(["']{1}[^}]*["']{1})\}/$1/g;
-        #print $content;
 	$self->response( Flickr::JSON::Response->new );
 
         $result = decode_json $content;
@@ -178,7 +182,6 @@ sub url {
     my %params = (
         method  => $method,
         api_key => $self->api_key,
-        api_secret => $self->api_secret,
         format  => 'json',
         %$args,
     );
@@ -189,18 +192,24 @@ sub url {
         . '?' . join( '&', map { $_ . '=' . $params{ $_ } } keys %params );    
 };
 
+sub get_frob {
+    my ($self) = @_;
+
+    $self->method("flickr.auth.getFrob", {});
+};
+
 sub auth_url {
     my ($self, $perms) = @_;
 
     my %params = (
         api_key => $self->api_key,
+        frob => $self->get_frob->content,
         perms => $perms,
     );
 
+    $self->frob($params{frob});
     $params{api_sig} = $self->sign_args(\%params);
-    delete $params{api_secret};
-    
-    $self->auth_base_url . '?api_key=' . $params{api_key} . "&perms=$perms&api_sig=".$params{api_sig}; 
+    $self->auth_base_url . '?api_key=' . $params{api_key} . "&perms=$perms&api_sig=" . $params{api_sig} . "&frob=" . $params{frob}; 
 }
 
 1;
