@@ -19,7 +19,7 @@ has timeout => (
 	trigger => \&set_api_timeout
 );
 
-has 'useragent' => (
+has useragent => (
     isa      => 'LWP::UserAgent',
     is       => 'rw',
     required => 1,
@@ -27,40 +27,40 @@ has 'useragent' => (
     default  => sub { LWP::UserAgent->new; },
 );
 
-has 'api_key' => (
+has api_key => (
     isa      => 'Str',
     is       => 'rw',
     required => 1,
 );
 
-has 'api_secret' => (
+has api_secret => (
     isa      => 'Str',
     is       => 'rw',
     required => 1,
 );
 
-has 'frob' => (
+has frob => (
 	isa	=> 'Str',
 	is	=> 'rw',
 	lazy	=> 1,
 	default => sub { [] },
 );
 
-has 'base_url' => (
+has base_url => (
     isa      => 'Str',
     is       => 'rw',
     lazy     => 1,
     default  => "http://api.flickr.com/services/rest/",
 );
 
-has 'auth_base_url' => (
+has auth_base_url => (
     isa      => 'Str',
     is       => 'rw',
     lazy     => 1,
     default  => "http://api.flickr.com/services/auth/",
 );
 
-has 'response' => (
+has response => (
     isa      => 'Flickr::JSON::Response',
     is       => 'rw',
     lazy     => 1,
@@ -69,7 +69,7 @@ has 'response' => (
     },
 );
 
-has 'with_bindings' => (
+has with_bindings => (
 	isa		=> 'Bool',
 	is	=> 'rw',
 	trigger => \&load_bindings
